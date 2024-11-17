@@ -1,5 +1,5 @@
 # eLearingGradeBot
-eLearingGradeBot is a insert grades tool for squ elearing website from csv or xlsx.
+eLearingGradeBot is a tool to automate the insertion of grades to squ elearing system from csv or xlsx.
 
 # How to install
 * First you need to install python.
