@@ -37,7 +37,6 @@ def set_grades(ses: rq.Session, view_id, std_ids, grades, comment):
             f"quickgrade_comments_{student_dic[std_ids[student]]['selector']}"
         ] = (comment[student] if comment is not None else "")
 
-    print(grading_data)
     ses.post("https://elearn.squ.edu.om/mod/assign/view.php", data=grading_data)
     return
 
