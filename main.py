@@ -3,15 +3,15 @@ from bs4 import BeautifulSoup
 import pandas as pd
 
 
-def set_grades(ses: rq.Session, view_id, std_ids, grades, comment):
+def set_grades(ses: rq.Session, view_id: list, std_ids: list, grades: list, comment :list):
     """set grades
 
     Args:
         ses (rq.Session): request session
-        view_id (_type_): exercise view id
-        std_ids (_type_): students ids
-        grades (_type_): students grades
-        comment (_type_): comment for the grades if there
+        view_id (list): exercise view id
+        std_ids (list): students ids
+        grades (list): students grades
+        comment (list): comment for the grades if there
     """
     sesskey, student_dic = get_grading_data(ses, view_id)
 
@@ -28,14 +28,13 @@ def set_grades(ses: rq.Session, view_id, std_ids, grades, comment):
             print(std_ids[student], "Not found.")
             continue
 
-        grading_data[f"quickgrade_{student_dic[std_ids[student]]['selector']}"] = int(
-            grades[student]
-        )
+        grading_data[f"quickgrade_{student_dic[std_ids[student]]['selector']}"] = grades[student]
+
         grading_data.update(student_dic[std_ids[student]]["grademodified"])
         grading_data.update(student_dic[std_ids[student]]["gradeattempt"])
         grading_data[
             f"quickgrade_comments_{student_dic[std_ids[student]]['selector']}"
-        ] = (comment[student] if comment is not None else "")
+        ] = (comment[student] if comment else "")
 
     ses.post("https://elearn.squ.edu.om/mod/assign/view.php", data=grading_data)
     return
@@ -47,7 +46,7 @@ def get_grading_data(ses: rq.Session, view_id):
 
     Args:
         ses (rq.Session): request session
-        view_id (_type_): exercise view id
+        view_id (int): exercise view id
 
     Returns:
         seskey -> str: session key for login session
@@ -93,20 +92,25 @@ def main():
     ids_col = input("Enter ids col name: ")
     grades_col = input("Enter grades col name: ")
     comments_col = None
-    if input("do you want to add comments with grade [yes]: ").lower() in ["y", "yes"]:
+    need_comments = False
+    if input("do you want to add comments with grade [y, yes]: ").lower() in ["y", "yes"]:
+        need_comments = True
         comments_col = input(
             "Enter comments col name (leave empty if col is next of grades col): "
         )
-        comments_col = 1 if comments_col == "" else comments_col
-
-    ids, grades, comments = get_file_grades(
-        file_name, ids_col, grades_col, comments_col
-    )
+    if need_comments:
+        ids, grades, comments = get_file_grades(
+            file_name, ids_col, grades_col, iscomments=True, comments_col_name=comments_col
+        )
+    else:
+        ids, grades, comments = get_file_grades(
+            file_name, ids_col, grades_col
+        )
     login(ses, username, password)
     set_grades(ses, view_id, ids, grades, comments)
 
 
-def login(ses: rq.Session, username, password):
+def login(ses: rq.Session, username:str, password:str):
     login_url = "https://elearn.squ.edu.om/login/index.php"
     login_page_req = ses.get(login_url)
 
@@ -123,25 +127,21 @@ def login(ses: rq.Session, username, password):
     ses.post(login_url, data=login_data)
 
 
-def get_file_grades(file_name, ids_col, grades_col, comments_col=None):
+def get_file_grades(file_name, ids_col_name, grades_col_name, iscomments=False, comments_col_name=None):
     file_extention = file_name.split(".")[1]
     if file_extention == "xlsx":
         df = pd.read_excel(file_name, sheet_name=input("Enter sheet name: "))
     elif file_extention == "csv":
         df = pd.read_csv(file_name)
     df = df.dropna()
-    if comments_col:
-        return (
-            list(df[ids_col].astype(int).astype(str)),
-            list(df[grades_col]),
-            (
-                list(df.iloc[:, list(df).index(grades_col) + 1])
-                if comments_col == 1
-                else list(df[comments_col])
-            ),
-        )
-    else:
-        return df[ids_col].astype(int), df[grades_col], None
+    ids_col = df[ids_col_name].astype(int).astype(str).values.tolist()
+    grades_col = df[grades_col_name].astype(str).fillna('0').values.tolist()
+    if iscomments:
+        comments_col = df[list(df)[list(df).index(grades_col_name) + 1]].fillna('').tolist() if not comments_col_name else df[
+            comments_col_name].fillna('').tolist()
+        return ids_col, grades_col, comments_col
+
+    return ids_col, grades_col, None
 
 
 main()
