@@ -12,7 +12,7 @@ eLearingGradeBot is a tool to automate the insertion of grades to squ elearing s
 # How to run
 * run it as any python code
     ```bash
-    python3 main.py
+    python main.py
     ```
 * when run it program need the following
     * View id: view id of the exercise, it's in the url of the exercise. Example:
