@@ -133,7 +133,6 @@ def get_file_grades(file_name, ids_col_name, grades_col_name, iscomments=False, 
         df = pd.read_excel(file_name, sheet_name=input("Enter sheet name: "))
     elif file_extention == "csv":
         df = pd.read_csv(file_name)
-    df = df.dropna()
     ids_col = df[ids_col_name].astype(int).astype(str).values.tolist()
     grades_col = df[grades_col_name].astype(str).fillna('0').values.tolist()
     if iscomments:
