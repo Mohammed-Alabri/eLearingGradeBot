@@ -68,7 +68,7 @@ def get_grading_data(ses: rq.Session, view_id):
 
     # studentId:{selector, grademodified, gradeattempt}
     student_dic = {
-        tr.find_all("td")[3].text: {
+        tr.find_all("td")[2].text: {
             "selector": tr["class"][0][4:],
             "grademodified": {
                 tr.find_all("input")[1]["name"]: tr.find_all("input")[1]["value"]
@@ -144,3 +144,4 @@ def get_file_grades(file_name, ids_col_name, grades_col_name, iscomments=False, 
 
 
 main()
+
